@@ -254,6 +254,7 @@
 </head>
 <body>
   <header>
+    <!-- Header with project name + small copyright line -->
     <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px;">
       <h1>MQTT Visualizer</h1>
       <span style="font-size: 12px; color: var(--muted);">(c) 2026 Carlo Schuelting</span>
@@ -265,6 +266,7 @@
       <span id="statusText">verbinde...</span>
     </div>
     <div class="toolbar">
+      <!-- Quick filters and controls -->
       <div class="field">
         <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
         <span class="info" title="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." data-tooltip="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." aria-label="Info: Topic-Filter">?</span>
@@ -341,6 +343,7 @@
   </footer>
 
   <script>
+    // DOM references
     const statusEl = document.getElementById('status');
     const statusText = document.getElementById('statusText');
     const messagesEl = document.getElementById('messages');
@@ -356,7 +359,7 @@
     const timeWindowValueEl = document.getElementById('timeWindowValue');
     const chartModeEl = document.getElementById('chartMode');
 
-    const MAX_POINTS = 120;
+    const MAX_POINTS = 120; // keep chart snappy
     const seriesByTopic = new Map();
     const latestByTopic = new Map();
     let refreshTimer = null;
@@ -365,6 +368,7 @@
     const chartNoticeEl = document.getElementById('chartNotice');
     let chart = null;
     if (window.Chart) {
+      // Main chart setup (single instance, datasets are swapped in)
       chart = new Chart(chartEl, {
         type: 'line',
         data: {
@@ -409,6 +413,7 @@
       return !Number.isNaN(n) && Number.isFinite(n);
     }
     function parsePayload(payload) {
+      // Try JSON payload with { value, unit } for nicer display
       let parsed = null;
       if (typeof payload === 'string') {
         try {
@@ -437,6 +442,7 @@
     }
     function updateChart() {
       if (!chart) return;
+      // Apply time window and chart mode before rendering
       const windowSeconds = Number(timeWindowEl.value || 0);
       const datasets = [];
       let labels = [];
@@ -469,6 +475,7 @@
       chart.update('none');
     }
     function updateCards() {
+      // Last value per topic
       cardsEl.innerHTML = '';
       const items = Array.from(latestByTopic.entries());
       for (const [topic, entry] of items) {
@@ -487,6 +494,7 @@
     }
 
     async function fetchStatus() {
+      // Broker status line
       try {
         const res = await fetch('/api/status');
         const data = await res.json();
@@ -538,6 +546,7 @@
     }
 
     async function fetchMessages() {
+      // Pull latest messages and rebuild UI state
       try {
         const res = await fetch('/api/messages?limit=200');
         const data = await res.json();
@@ -592,6 +601,7 @@
     }
 
     function setAutoRefresh() {
+      // Re-arm polling based on selection
       if (refreshTimer) {
         clearInterval(refreshTimer);
         refreshTimer = null;
@@ -635,6 +645,7 @@
     });
 
     updateWindowLabel();
+    // Initial load
     refresh();
     setAutoRefresh();
   </script>

@@ -25,12 +25,14 @@ def getenv_bool(name: str, default: bool = False) -> bool:
 
 
 def main() -> int:
+    # Keep config consistent with the app defaults and .env.
     host = os.getenv("MQTT_BROKER_HOST", "127.0.0.1")
     port = getenv_int("MQTT_BROKER_PORT", 1883)
     username = os.getenv("MQTT_USERNAME")
     password = os.getenv("MQTT_PASSWORD")
     use_tls = getenv_bool("MQTT_TLS", False)
 
+    # Random client id to avoid collisions when running multiple times.
     client = mqtt.Client(client_id=f"mqtt-visualizer-test-{random.randint(1000,9999)}")
     if username:
         client.username_pw_set(username, password or None)
@@ -40,6 +42,7 @@ def main() -> int:
     client.connect(host, port, keepalive=60)
     client.loop_start()
 
+    # Demo topics matching our UI defaults.
     topics = [
         "sensors/dickenmessung",
         "sensors/halle_x/temperatur",
@@ -52,6 +55,7 @@ def main() -> int:
     iterations = 20  # 10 seconds / 0.5 seconds
 
     for _ in range(iterations):
+        # ISO timestamp so the UI can show exact time if needed.
         timestamp = datetime.now(timezone.utc).isoformat()
         payloads = {
             topics[0]: round(random.uniform(0.5, 12.0), 2),   # mm
@@ -62,6 +66,7 @@ def main() -> int:
         }
 
         for topic, value in payloads.items():
+            # JSON payload with value + unit so the UI can parse both.
             message = json.dumps(
                 {
                     "ts": timestamp,

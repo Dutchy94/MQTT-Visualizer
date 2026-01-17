@@ -15,6 +15,7 @@ def _env_bool(value, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+# Load .env if present (keeps local setup simple).
 load_dotenv()
 
 app = Flask(__name__)
@@ -30,6 +31,7 @@ MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "mqtt-visualizer")
 MQTT_KEEPALIVE = int(os.getenv("MQTT_KEEPALIVE", "60"))
 MQTT_TLS = _env_bool(os.getenv("MQTT_TLS"), default=False)
 
+# Ring buffer for recent messages plus a lock for thread safety.
 _messages = deque(maxlen=MAX_MESSAGES)
 _messages_lock = Lock()
 _last_connect_error = None
@@ -126,8 +128,8 @@ def api_publish():
     return jsonify({"rc": result.rc})
 
 
-
 def start_mqtt():
+    # Async connect + background network loop so Flask stays responsive.
     mqtt_client.connect_async(MQTT_BROKER_HOST, MQTT_BROKER_PORT, MQTT_KEEPALIVE)
     mqtt_client.loop_start()
 
