@@ -254,7 +254,7 @@
 </head>
 <body>
   <header>
-    <!-- Header with project name + small copyright line -->
+    <!-- Header mit Projektname + kleiner Copyright  Hinweis -->
     <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px;">
       <h1>MQTT Visualizer</h1>
       <span style="font-size: 12px; color: var(--muted);">(c) 2026 Carlo Schuelting</span>
@@ -266,7 +266,7 @@
       <span id="statusText">verbinde...</span>
     </div>
     <div class="toolbar">
-      <!-- Quick filters and controls -->
+      <!-- Schnelle Filter  und Controls -->
       <div class="field">
         <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
         <span class="info" title="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." data-tooltip="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." aria-label="Info: Topic-Filter">?</span>
@@ -343,7 +343,7 @@
   </footer>
 
   <script>
-    // DOM references
+    // DOM-Referenzen
     const statusEl = document.getElementById('status');
     const statusText = document.getElementById('statusText');
     const messagesEl = document.getElementById('messages');
@@ -359,7 +359,7 @@
     const timeWindowValueEl = document.getElementById('timeWindowValue');
     const chartModeEl = document.getElementById('chartMode');
 
-    const MAX_POINTS = 120; // keep chart snappy
+    const MAX_POINTS = 120; // Chart  bleibt flott
     const seriesByTopic = new Map();
     const latestByTopic = new Map();
     let refreshTimer = null;
@@ -368,7 +368,7 @@
     const chartNoticeEl = document.getElementById('chartNotice');
     let chart = null;
     if (window.Chart) {
-      // Main chart setup (single instance, datasets are swapped in)
+      // Haupt-Chart Setup (einmalig, Datasets werden getauscht)
       chart = new Chart(chartEl, {
         type: 'line',
         data: {
@@ -413,7 +413,7 @@
       return !Number.isNaN(n) && Number.isFinite(n);
     }
     function parsePayload(payload) {
-      // Try JSON payload with { value, unit } for nicer display
+      // JSON-Payload mit { value, unit } versuchen fuer schicke Anzeige
       let parsed = null;
       if (typeof payload === 'string') {
         try {
@@ -442,7 +442,7 @@
     }
     function updateChart() {
       if (!chart) return;
-      // Apply time window and chart mode before rendering
+      // Zeitfenster & Chart-Mode vorm Rendern anwenden
       const windowSeconds = Number(timeWindowEl.value || 0);
       const datasets = [];
       let labels = [];
@@ -475,7 +475,7 @@
       chart.update('none');
     }
     function updateCards() {
-      // Last value per topic
+      // Letzter Wert je Topic
       cardsEl.innerHTML = '';
       const items = Array.from(latestByTopic.entries());
       for (const [topic, entry] of items) {
@@ -494,7 +494,7 @@
     }
 
     async function fetchStatus() {
-      // Broker status line
+      // Broker-Statuszeile
       try {
         const res = await fetch('/api/status');
         const data = await res.json();
@@ -546,7 +546,7 @@
     }
 
     async function fetchMessages() {
-      // Pull latest messages and rebuild UI state
+      // Letzte Messages holen und UI  neu bauen
       try {
         const res = await fetch('/api/messages?limit=200');
         const data = await res.json();
@@ -601,7 +601,7 @@
     }
 
     function setAutoRefresh() {
-      // Re-arm polling based on selection
+      // Polling neu setzen je nach Auswahl
       if (refreshTimer) {
         clearInterval(refreshTimer);
         refreshTimer = null;
@@ -645,7 +645,7 @@
     });
 
     updateWindowLabel();
-    // Initial load
+    // Initialer Load
     refresh();
     setAutoRefresh();
   </script>
