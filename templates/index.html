@@ -70,6 +70,24 @@
       font-size: 12px;
       color: var(--danger);
     }
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .field .info {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: help;
+      user-select: none;
+    }
     .status .dot {
       width: 10px;
       height: 10px;
@@ -164,7 +182,10 @@
 </head>
 <body>
   <header>
-    <h1>MQTT Visualizer</h1>
+    <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+      <h1>MQTT Visualizer</h1>
+      <span style="font-size: 12px; color: var(--muted);">(c) 2026 Carlo Schuelting</span>
+    </div>
   </header>
   <main>
     <div id="status" class="status">
@@ -172,22 +193,37 @@
       <span id="statusText">verbinde...</span>
     </div>
     <div class="toolbar">
-      <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
-      <select id="topicSelect">
-        <option value="">Topic-Auswahl</option>
-      </select>
-      <label>
-        <input id="regexToggle" type="checkbox" />
-        Regex
-      </label>
-      <select id="interval">
+      <div class="field">
+        <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
+        <span class="info" title="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche.">?</span>
+      </div>
+      <div class="field">
+        <select id="topicSelect">
+          <option value="">Topic-Auswahl</option>
+        </select>
+        <span class="info" title="Waehle ein bekanntes Topic und setze es automatisch als Filter.">?</span>
+      </div>
+      <div class="field">
+        <label>
+          <input id="regexToggle" type="checkbox" />
+          Regex
+        </label>
+        <span class="info" title="Interpretiert den Filter als regulaeren Ausdruck (Regex).">?</span>
+      </div>
+      <div class="field">
+        <select id="interval">
         <option value="1">Auto-Refresh: 1s</option>
         <option value="2" selected>Auto-Refresh: 2s</option>
         <option value="5">Auto-Refresh: 5s</option>
         <option value="10">Auto-Refresh: 10s</option>
         <option value="0">Auto-Refresh: aus</option>
-      </select>
-      <button id="refreshBtn">Jetzt aktualisieren</button>
+        </select>
+        <span class="info" title="Stellt das automatische Aktualisierungsintervall ein.">?</span>
+      </div>
+      <div class="field">
+        <button id="refreshBtn">Jetzt aktualisieren</button>
+        <span class="info" title="Laedt Status, Nachrichten, Karten und Charts sofort neu.">?</span>
+      </div>
     </div>
     <div id="filterHint" class="toolbar hint" style="display:none;">Ungueltiger Regex</div>
     <div class="panel">
