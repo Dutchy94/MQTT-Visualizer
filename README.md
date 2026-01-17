@@ -1,6 +1,9 @@
 # MQTT-Visualizer
 Flask Web-UI, die auf einem Mosquitto-Broker lauscht und eingehende MQTT-Nachrichten live anzeigt.
 
+## Changelog
+- 2026-01-17: Test-Publisher fuer Sensor-Daten hinzugefuegt, UI kann JSON-Payloads mit `value` und `unit` anzeigen.
+
 ## Features
 - Abonniert einen konfigurierbaren MQTT-Topic-Filter (Default: `#`)
 - Live-Dashboard mit Charts fuer numerische Payloads
@@ -69,6 +72,15 @@ python app.py
 - `http://127.0.0.1:5000`
 
 Hinweis: Die Charts werden aktuell ueber ein CDN geladen. In abgeschotteten Netzen kannst du Chart.js lokal einbinden.
+
+## Makefile (optional)
+Wenn du lieber kurze Befehle willst:
+```
+make venv
+make install
+make run
+make test-publish
+```
 
 ## MQTT Test (optional)
 ### Schnelltest per Mosquitto
