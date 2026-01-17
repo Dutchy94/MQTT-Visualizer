@@ -1,16 +1,19 @@
 PYTHON ?= python3
 VENV ?= .venv
+VENV_BIN := $(VENV)/bin
 
-.PHONY: venv install run test-publish
+.PHONY: venv install setup run test-publish
 
 venv:
 	$(PYTHON) -m venv $(VENV)
 
-install:
-	$(VENV)/bin/pip install -r requirements.txt
+install: venv
+	$(VENV_BIN)/pip install -r requirements.txt
 
-run:
-	$(VENV)/bin/$(PYTHON) app.py
+setup: install
 
-test-publish:
-	$(VENV)/bin/$(PYTHON) test_publisher.py
+run: setup
+	$(VENV_BIN)/$(PYTHON) app.py
+
+test-publish: setup
+	$(VENV_BIN)/$(PYTHON) test_publisher.py

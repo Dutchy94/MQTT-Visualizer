@@ -17,6 +17,21 @@ Flask Web-UI, die auf einem Mosquitto-Broker lauscht und eingehende MQTT-Nachric
 - Ein laufender Mosquitto/MQTT-Broker (lokal oder remote)
 - Internetzugang fuer Chart.js (CDN) oder lokale Einbindung
 
+## Schnellstart (empfohlen)
+```
+git clone <repo-url>
+cd MQTT-Visualizer
+make run
+```
+
+Optional: Testdaten senden
+```
+make test-publish
+```
+
+Die Web-UI erreichst du unter:
+- `http://127.0.0.1:5000`
+
 ## Installation (ausfuehrlich)
 1) Repository holen
 ```
@@ -72,6 +87,12 @@ python app.py
 - `http://127.0.0.1:5000`
 
 Hinweis: Die Charts werden aktuell ueber ein CDN geladen. In abgeschotteten Netzen kannst du Chart.js lokal einbinden.
+
+## Konfiguration per .env (optional)
+Du kannst eine `.env` im Repo anlegen (oder `.env.example` kopieren). Diese wird automatisch geladen.
+```
+cp .env.example .env
+```
 
 ## Makefile (optional)
 Wenn du lieber kurze Befehle willst:

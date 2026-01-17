@@ -5,6 +5,7 @@ from collections import deque
 from threading import Lock
 
 from flask import Flask, jsonify, render_template, request
+from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 
 
@@ -13,6 +14,8 @@ def _env_bool(value, default=False):
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
+
+load_dotenv()
 
 app = Flask(__name__)
 
