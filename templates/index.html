@@ -262,6 +262,7 @@
   </header>
   <main>
     <div id="status" class="status">
+      <!-- Live-Status vom Broker -->
       <span class="dot"></span>
       <span id="statusText">verbinde...</span>
     </div>
@@ -314,18 +315,22 @@
         <span class="info" title="Laedt Status, Nachrichten, Karten und Charts sofort neu." data-tooltip="Laedt Status, Nachrichten, Karten und Charts sofort neu." aria-label="Info: Aktualisieren">?</span>
       </div>
     </div>
+    <!-- Hinweis wenn Regex kaputt ist -->
     <div id="filterHint" class="toolbar hint" style="display:none;">Ungueltiger Regex</div>
     <div class="panel">
       <h2>Live Charts</h2>
+      <!-- Chart.js rendert hier rein -->
       <canvas id="chart"></canvas>
       <div id="chartNotice" class="card" style="display:none;">Chart.js konnte nicht geladen werden. Bitte Internetzugang pruefen oder lokal einbinden.</div>
     </div>
     <div class="panel">
       <h2>Letzte Werte</h2>
+      <!-- Karten fuer letzte Werte je Topic -->
       <div id="cards" class="grid"></div>
     </div>
     <div class="panel">
       <h2>Nachrichten</h2>
+      <!-- Tabelle mit den letzten Nachrichten -->
       <table>
         <thead>
           <tr>
@@ -376,11 +381,13 @@
           datasets: []
         },
         options: {
+          // Chart.js Optionen hier zentral.
           responsive: true,
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { labels: { color: '#e5e7eb' } },
             tooltip: {
+              // Tooltip zeigt alle Serien am aktuellen X.
               mode: 'index',
               intersect: false,
               callbacks: {
@@ -389,25 +396,30 @@
             }
           },
           scales: {
+            // Achsen Styling, dezent.
             x: { ticks: { color: '#94a3b8' }, grid: { color: '#1f2937' } },
             y: { ticks: { color: '#94a3b8' }, grid: { color: '#1f2937' } }
           }
         }
       });
     } else {
+      // Fallback falls Chart.js nicht geladen wurde.
       chartEl.style.display = 'none';
       chartNoticeEl.style.display = 'block';
     }
 
     function formatTime(ts) {
+      // Timestamp (Sekunden) fuer Tabellenanzeige.
       const d = new Date(ts * 1000);
       return d.toLocaleString();
     }
     function shortTime(ts) {
+      // Kurzformat fuer die X-Achse.
       const d = new Date(ts * 1000);
       return d.toLocaleTimeString();
     }
     function isNumeric(value) {
+      // Guard: echte Zahl?
       if (value === null || value === undefined) return false;
       const n = Number(value);
       return !Number.isNaN(n) && Number.isFinite(n);
@@ -423,17 +435,21 @@
         }
       }
       if (parsed && typeof parsed === 'object' && 'value' in parsed) {
+        // Typischer Fall: JSON mit value + unit.
         const value = parsed.value;
         const unit = parsed.unit || null;
         return { value, unit, raw: payload };
       }
+      // Fallback: raw Value behalten.
       return { value: payload, unit: null, raw: payload };
     }
     function getColor(idx) {
+      // Farbpalette fuer Datensaetze.
       const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#e879f9', '#f97316', '#60a5fa'];
       return palette[idx % palette.length];
     }
     function formatWindow(seconds) {
+      // Slider-Label formatiert in s oder m.
       if (seconds >= 60) {
         const minutes = Math.round(seconds / 60);
         return `letzte ${minutes}m`;
@@ -468,6 +484,7 @@
         });
       }
       if (chart) {
+        // Typ dynamisch setzen (Linie/Balken).
         chart.config.type = chartMode === 'bar-grouped' ? 'bar' : 'line';
       }
       chart.data.labels = labels;
@@ -512,6 +529,7 @@
     }
 
     function buildTopicSelect(topics) {
+      // Dropdown fuellen mit bekannten Topics.
       const current = topicSelectEl.value;
       topicSelectEl.innerHTML = '<option value=\"\">Topic-Auswahl</option>';
       for (const topic of topics) {
@@ -526,6 +544,7 @@
     }
 
     function buildFilterMatcher() {
+      // Filter-Logik: plain text oder regex.
       const raw = filterEl.value.trim();
       if (!raw) {
         filterHintEl.style.display = 'none';
@@ -596,6 +615,7 @@
     }
 
     async function refresh() {
+      // Status + Messages in einem Rutsch.
       await fetchStatus();
       await fetchMessages();
     }
@@ -612,13 +632,16 @@
       }
     }
     function updateWindowLabel() {
+      // Anzeige neben dem Slider aktualisieren.
       timeWindowValueEl.textContent = formatWindow(Number(timeWindowEl.value || 0));
     }
 
     filterEl.addEventListener('input', () => {
+      // Live filtern bei Eingabe.
       refresh();
     });
     topicSelectEl.addEventListener('change', () => {
+      // Topic -> Filterfeld setzen.
       if (topicSelectEl.value) {
         filterEl.value = topicSelectEl.value;
       } else {
@@ -627,20 +650,25 @@
       refresh();
     });
     regexToggleEl.addEventListener('change', () => {
+      // Regex an/aus -> neu laden.
       refresh();
     });
     intervalEl.addEventListener('change', () => {
+      // Refresh-Timer neu setzen.
       setAutoRefresh();
     });
     chartModeEl.addEventListener('change', () => {
+      // Diagrammtyp wechseln.
       chartMode = chartModeEl.value;
       updateChart();
     });
     timeWindowEl.addEventListener('input', () => {
+      // Zeitfenster live anpassen.
       updateWindowLabel();
       updateChart();
     });
     refreshBtn.addEventListener('click', () => {
+      // Manueller Refresh.
       refresh();
     });
 

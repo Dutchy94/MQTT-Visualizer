@@ -13,11 +13,13 @@ import paho.mqtt.client as mqtt
 
 
 def getenv_int(name: str, default: int) -> int:
+    # Nur einfache int Werte aus ENV, sonst Default.
     value = os.getenv(name)
     return int(value) if value and value.isdigit() else default
 
 
 def getenv_bool(name: str, default: bool = False) -> bool:
+    # Bool Flags aus ENV, kleine Varianten erlaubt.
     value = os.getenv(name)
     if value is None:
         return default
@@ -35,10 +37,13 @@ def main() -> int:
     # Zufalls-Client-ID, damit nix  kollidiert.
     client = mqtt.Client(client_id=f"mqtt-visualizer-test-{random.randint(1000,9999)}")
     if username:
+        # Optional Benutzer/Passwort falls Broker auth nutzt.
         client.username_pw_set(username, password or None)
     if use_tls:
+        # TLS aktivieren (einfach, ohne custom CA).
         client.tls_set()
 
+    # Broker verbinden und Netzwerk-Loop starten.
     client.connect(host, port, keepalive=60)
     client.loop_start()
 
@@ -51,12 +56,14 @@ def main() -> int:
         "sensors/stoerung",
     ]
 
+    # Wir senden 20x alle 0.5s -> ca 10 Sekunden.
     start = time.time()
     iterations = 20  # 10 Sekunden / 0.5 Sekunden
 
     for _ in range(iterations):
         # ISO-Timestamp damit die UI  genaue Zeit zeigen kann.
         timestamp = datetime.now(timezone.utc).isoformat()
+        # Werte leicht variieren fuer "live" Effekt.
         payloads = {
             topics[0]: round(random.uniform(0.5, 12.0), 2),   # mm
             topics[1]: round(random.uniform(16.0, 32.0), 2),  # C
@@ -80,14 +87,18 @@ def main() -> int:
                     }[topic],
                 }
             )
+            # Publish auf Topic, QoS 0 reicht fuer Demo.
             client.publish(topic, message, qos=0, retain=False)
 
+        # 500ms warten zwischen den Batches.
         time.sleep(0.5)
 
+    # Aufraeumen.
     client.loop_stop()
     client.disconnect()
 
     elapsed = time.time() - start
+    # Kleines Abschluss-Log fuer Terminal.
     print(f"Done. Sent {iterations} batches in {elapsed:.1f}s to {host}:{port}")
     return 0
 
