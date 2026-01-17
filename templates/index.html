@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MQTT Visualizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #111827;
+      --panel-soft: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+    }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+      background: radial-gradient(circle at top left, #101935 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+    header {
+      padding: 20px 24px;
+      background: linear-gradient(120deg, #0b1020 0%, #141b33 100%);
+      border-bottom: 1px solid #1f2937;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    main {
+      padding: 20px 24px 40px;
+      display: grid;
+      gap: 18px;
+    }
+    .status {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .toolbar input,
+    .toolbar select,
+    .toolbar button {
+      background: var(--panel-soft);
+      border: 1px solid #1f2937;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .toolbar button {
+      cursor: pointer;
+    }
+    .toolbar .hint {
+      font-size: 12px;
+      color: var(--danger);
+    }
+    .status .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+    .status.online .dot {
+      background: var(--accent-2);
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .card {
+      background: var(--panel-soft);
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .card .value {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 6px;
+      color: var(--accent);
+    }
+    .card .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-family: "Consolas", "Menlo", monospace;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1f2937;
+      vertical-align: top;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #111827;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .topic {
+      color: #93c5fd;
+      font-family: "Consolas", "Menlo", monospace;
+    }
+    .payload {
+      font-family: "Consolas", "Menlo", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    canvas {
+      width: 100%;
+      max-height: 320px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MQTT Visualizer</h1>
+  </header>
+  <main>
+    <div id="status" class="status">
+      <span class="dot"></span>
+      <span id="statusText">verbinde...</span>
+    </div>
+    <div class="toolbar">
+      <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
+      <select id="topicSelect">
+        <option value="">Topic-Auswahl</option>
+      </select>
+      <label>
+        <input id="regexToggle" type="checkbox" />
+        Regex
+      </label>
+      <select id="interval">
+        <option value="1">Auto-Refresh: 1s</option>
+        <option value="2" selected>Auto-Refresh: 2s</option>
+        <option value="5">Auto-Refresh: 5s</option>
+        <option value="10">Auto-Refresh: 10s</option>
+        <option value="0">Auto-Refresh: aus</option>
+      </select>
+      <button id="refreshBtn">Jetzt aktualisieren</button>
+    </div>
+    <div id="filterHint" class="toolbar hint" style="display:none;">Ungueltiger Regex</div>
+    <div class="panel">
+      <h2>Live Charts</h2>
+      <canvas id="chart"></canvas>
+      <div id="chartNotice" class="card" style="display:none;">Chart.js konnte nicht geladen werden. Bitte Internetzugang pruefen oder lokal einbinden.</div>
+    </div>
+    <div class="panel">
+      <h2>Letzte Werte</h2>
+      <div id="cards" class="grid"></div>
+    </div>
+    <div class="panel">
+      <h2>Nachrichten</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Zeit</th>
+            <th>Topic</th>
+            <th>Payload</th>
+          </tr>
+        </thead>
+        <tbody id="messages"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const messagesEl = document.getElementById('messages');
+    const cardsEl = document.getElementById('cards');
+    const chartEl = document.getElementById('chart');
+    const filterEl = document.getElementById('filter');
+    const intervalEl = document.getElementById('interval');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const topicSelectEl = document.getElementById('topicSelect');
+    const regexToggleEl = document.getElementById('regexToggle');
+    const filterHintEl = document.getElementById('filterHint');
+
+    const MAX_POINTS = 120;
+    const seriesByTopic = new Map();
+    const latestByTopic = new Map();
+    let refreshTimer = null;
+
+    const chartNoticeEl = document.getElementById('chartNotice');
+    let chart = null;
+    if (window.Chart) {
+      chart = new Chart(chartEl, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: []
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'nearest', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#e5e7eb' } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: '#1f2937' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1f2937' } }
+          }
+        }
+      });
+    } else {
+      chartEl.style.display = 'none';
+      chartNoticeEl.style.display = 'block';
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts * 1000);
+      return d.toLocaleString();
+    }
+    function shortTime(ts) {
+      const d = new Date(ts * 1000);
+      return d.toLocaleTimeString();
+    }
+    function isNumeric(value) {
+      if (value === null || value === undefined) return false;
+      const n = Number(value);
+      return !Number.isNaN(n) && Number.isFinite(n);
+    }
+    function parsePayload(payload) {
+      let parsed = null;
+      if (typeof payload === 'string') {
+        try {
+          parsed = JSON.parse(payload);
+        } catch (err) {
+          parsed = null;
+        }
+      }
+      if (parsed && typeof parsed === 'object' && 'value' in parsed) {
+        const value = parsed.value;
+        const unit = parsed.unit || null;
+        return { value, unit, raw: payload };
+      }
+      return { value: payload, unit: null, raw: payload };
+    }
+    function getColor(idx) {
+      const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#e879f9', '#f97316', '#60a5fa'];
+      return palette[idx % palette.length];
+    }
+    function updateChart() {
+      if (!chart) return;
+      const datasets = [];
+      let labels = [];
+      let i = 0;
+      for (const [topic, points] of seriesByTopic.entries()) {
+        const color = getColor(i++);
+        const data = points.map(p => p.value);
+        const localLabels = points.map(p => shortTime(p.ts));
+        if (localLabels.length > labels.length) {
+          labels = localLabels;
+        }
+        datasets.push({
+          label: topic,
+          data,
+          borderColor: color,
+          backgroundColor: color + '33',
+          tension: 0.25,
+          spanGaps: true
+        });
+      }
+      chart.data.labels = labels;
+      chart.data.datasets = datasets;
+      chart.update('none');
+    }
+    function updateCards() {
+      cardsEl.innerHTML = '';
+      const items = Array.from(latestByTopic.entries());
+      for (const [topic, entry] of items) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="label">${topic}</div>
+          <div class="value">${entry.value}</div>
+          <div class="meta">${formatTime(entry.ts)}</div>
+        `;
+        cardsEl.appendChild(card);
+      }
+      if (!items.length) {
+        cardsEl.innerHTML = '<div class="card"><div class="label">No data</div><div class="value">-</div></div>';
+      }
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.last_connect_error) {
+          statusEl.classList.remove('online');
+          statusText.textContent = data.last_connect_error;
+        } else {
+          statusEl.classList.add('online');
+          statusText.textContent = `verbunden: ${data.broker.host}:${data.broker.port} (${data.broker.topic})`;
+        }
+      } catch (err) {
+        statusEl.classList.remove('online');
+        statusText.textContent = 'keine Verbindung zum Server';
+      }
+    }
+
+    function buildTopicSelect(topics) {
+      const current = topicSelectEl.value;
+      topicSelectEl.innerHTML = '<option value=\"\">Topic-Auswahl</option>';
+      for (const topic of topics) {
+        const opt = document.createElement('option');
+        opt.value = topic;
+        opt.textContent = topic;
+        topicSelectEl.appendChild(opt);
+      }
+      if (current) {
+        topicSelectEl.value = current;
+      }
+    }
+
+    function buildFilterMatcher() {
+      const raw = filterEl.value.trim();
+      if (!raw) {
+        filterHintEl.style.display = 'none';
+        return () => true;
+      }
+      if (!regexToggleEl.checked) {
+        filterHintEl.style.display = 'none';
+        return (topic) => topic.includes(raw);
+      }
+      try {
+        const re = new RegExp(raw);
+        filterHintEl.style.display = 'none';
+        return (topic) => re.test(topic);
+      } catch (err) {
+        filterHintEl.style.display = 'block';
+        return () => false;
+      }
+    }
+
+    async function fetchMessages() {
+      try {
+        const res = await fetch('/api/messages?limit=200');
+        const data = await res.json();
+        messagesEl.innerHTML = '';
+        seriesByTopic.clear();
+        latestByTopic.clear();
+        const matcher = buildFilterMatcher();
+        const topicsSet = new Set();
+        for (const msg of data.messages) {
+          topicsSet.add(msg.topic);
+          if (!matcher(msg.topic)) continue;
+          const parsed = parsePayload(msg.payload);
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${formatTime(msg.ts)}</td>
+            <td class="topic">${msg.topic}</td>
+            <td class="payload">${parsed.raw}</td>
+          `;
+          messagesEl.appendChild(row);
+          let chartValue = parsed.value;
+          if (typeof chartValue === 'boolean') {
+            chartValue = chartValue ? 1 : 0;
+          }
+          if (isNumeric(chartValue)) {
+            const value = Number(chartValue);
+            if (!seriesByTopic.has(msg.topic)) {
+              seriesByTopic.set(msg.topic, []);
+            }
+            const arr = seriesByTopic.get(msg.topic);
+            arr.push({ ts: msg.ts, value });
+            if (arr.length > MAX_POINTS) {
+              arr.splice(0, arr.length - MAX_POINTS);
+            }
+            const display = parsed.unit ? `${value} ${parsed.unit}` : value;
+            latestByTopic.set(msg.topic, { ts: msg.ts, value: display });
+          } else {
+            latestByTopic.set(msg.topic, { ts: msg.ts, value: parsed.raw });
+          }
+        }
+        updateChart();
+        updateCards();
+        buildTopicSelect(Array.from(topicsSet).sort());
+      } catch (err) {
+        messagesEl.innerHTML = '<tr><td colspan="3">Fehler beim Laden</td></tr>';
+        cardsEl.innerHTML = '';
+      }
+    }
+
+    async function refresh() {
+      await fetchStatus();
+      await fetchMessages();
+    }
+
+    function setAutoRefresh() {
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+      const seconds = Number(intervalEl.value);
+      if (seconds > 0) {
+        refreshTimer = setInterval(refresh, seconds * 1000);
+      }
+    }
+
+    filterEl.addEventListener('input', () => {
+      refresh();
+    });
+    topicSelectEl.addEventListener('change', () => {
+      if (topicSelectEl.value) {
+        filterEl.value = topicSelectEl.value;
+      } else {
+        filterEl.value = '';
+      }
+      refresh();
+    });
+    regexToggleEl.addEventListener('change', () => {
+      refresh();
+    });
+    intervalEl.addEventListener('change', () => {
+      setAutoRefresh();
+    });
+    refreshBtn.addEventListener('click', () => {
+      refresh();
+    });
+
+    refresh();
+    setAutoRefresh();
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""
+Publish sample sensor data to multiple MQTT topics every 500ms for 10 seconds.
+"""
+
+import json
+import os
+import random
+import time
+from datetime import datetime, timezone
+
+import paho.mqtt.client as mqtt
+
+
+def getenv_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    return int(value) if value and value.isdigit() else default
+
+
+def getenv_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
+def main() -> int:
+    host = os.getenv("MQTT_BROKER_HOST", "127.0.0.1")
+    port = getenv_int("MQTT_BROKER_PORT", 1883)
+    username = os.getenv("MQTT_USERNAME")
+    password = os.getenv("MQTT_PASSWORD")
+    use_tls = getenv_bool("MQTT_TLS", False)
+
+    client = mqtt.Client(client_id=f"mqtt-visualizer-test-{random.randint(1000,9999)}")
+    if username:
+        client.username_pw_set(username, password or None)
+    if use_tls:
+        client.tls_set()
+
+    client.connect(host, port, keepalive=60)
+    client.loop_start()
+
+    topics = [
+        "sensors/dickenmessung",
+        "sensors/halle_x/temperatur",
+        "sensors/entfernung",
+        "sensors/mmwave/presence",
+        "sensors/stoerung",
+    ]
+
+    start = time.time()
+    iterations = 20  # 10 seconds / 0.5 seconds
+
+    for _ in range(iterations):
+        timestamp = datetime.now(timezone.utc).isoformat()
+        payloads = {
+            topics[0]: round(random.uniform(0.5, 12.0), 2),   # mm
+            topics[1]: round(random.uniform(16.0, 32.0), 2),  # C
+            topics[2]: round(random.uniform(50.0, 800.0), 1), # mm
+            topics[3]: random.randint(0, 1),                 # presence 0/1
+            topics[4]: random.randint(0, 1),                 # stoerung 0/1
+        }
+
+        for topic, value in payloads.items():
+            message = json.dumps(
+                {
+                    "ts": timestamp,
+                    "value": value,
+                    "unit": {
+                        topics[0]: "mm",
+                        topics[1]: "C",
+                        topics[2]: "mm",
+                        topics[3]: "bool",
+                        topics[4]: "bool",
+                    }[topic],
+                }
+            )
+            client.publish(topic, message, qos=0, retain=False)
+
+        time.sleep(0.5)
+
+    client.loop_stop()
+    client.disconnect()
+
+    elapsed = time.time() - start
+    print(f"Done. Sent {iterations} batches in {elapsed:.1f}s to {host}:{port}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
