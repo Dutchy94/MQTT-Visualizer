@@ -87,6 +87,78 @@
       font-size: 11px;
       cursor: help;
       user-select: none;
+      position: relative;
+    }
+    .field .info::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      right: 0;
+      top: 26px;
+      background: #0b1020;
+      color: var(--text);
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      transition: opacity 120ms ease, transform 120ms ease;
+      z-index: 10;
+    }
+    .field .info:hover::after,
+    .field .info:focus::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 220px;
+    }
+    .range-wrap input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 140px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      outline: none;
+      box-shadow: inset 0 0 0 1px #1f2937;
+    }
+    .range-wrap input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #0b1020;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+      cursor: pointer;
+    }
+    .range-wrap input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #0b1020;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+      cursor: pointer;
+    }
+    .range-wrap input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      box-shadow: inset 0 0 0 1px #1f2937;
+    }
+    .range-value {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 72px;
+      text-align: right;
     }
     .status .dot {
       width: 10px;
@@ -195,20 +267,20 @@
     <div class="toolbar">
       <div class="field">
         <input id="filter" type="text" placeholder="Topic-Filter (z.B. sensors/)" />
-        <span class="info" title="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche.">?</span>
+        <span class="info" title="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." data-tooltip="Filtert die angezeigten Topics. Ohne Regex ist es eine einfache Teil-String-Suche." aria-label="Info: Topic-Filter">?</span>
       </div>
       <div class="field">
         <select id="topicSelect">
           <option value="">Topic-Auswahl</option>
         </select>
-        <span class="info" title="Waehle ein bekanntes Topic und setze es automatisch als Filter.">?</span>
+        <span class="info" title="Waehle ein bekanntes Topic und setze es automatisch als Filter." data-tooltip="Waehle ein bekanntes Topic und setze es automatisch als Filter." aria-label="Info: Topic-Auswahl">?</span>
       </div>
       <div class="field">
         <label>
           <input id="regexToggle" type="checkbox" />
           Regex
         </label>
-        <span class="info" title="Interpretiert den Filter als regulaeren Ausdruck (Regex).">?</span>
+        <span class="info" title="Interpretiert den Filter als regulaeren Ausdruck (Regex)." data-tooltip="Interpretiert den Filter als regulaeren Ausdruck (Regex)." aria-label="Info: Regex">?</span>
       </div>
       <div class="field">
         <select id="interval">
@@ -218,11 +290,26 @@
         <option value="10">Auto-Refresh: 10s</option>
         <option value="0">Auto-Refresh: aus</option>
         </select>
-        <span class="info" title="Stellt das automatische Aktualisierungsintervall ein.">?</span>
+        <span class="info" title="Stellt das automatische Aktualisierungsintervall ein." data-tooltip="Stellt das automatische Aktualisierungsintervall ein." aria-label="Info: Auto-Refresh">?</span>
+      </div>
+      <div class="field">
+        <select id="chartMode">
+          <option value="line-smooth" selected>Diagramm: Linie (weich)</option>
+          <option value="line-straight">Diagramm: Linie (gerade)</option>
+          <option value="bar-grouped">Diagramm: Balken (gruppiert)</option>
+        </select>
+        <span class="info" title="Wechselt den Diagrammtyp und die Linien-Interpolation." data-tooltip="Wechselt den Diagrammtyp und die Linien-Interpolation." aria-label="Info: Diagrammtyp">?</span>
+      </div>
+      <div class="field">
+        <div class="range-wrap">
+          <input id="timeWindow" type="range" min="10" max="600" step="10" value="120" />
+          <span id="timeWindowValue" class="range-value">letzte 2m</span>
+        </div>
+        <span class="info" title="Begrenzt die Zeitachse im Chart auf die letzten Sekunden/Minuten." data-tooltip="Begrenzt die Zeitachse im Chart auf die letzten Sekunden/Minuten." aria-label="Info: Zeitfenster">?</span>
       </div>
       <div class="field">
         <button id="refreshBtn">Jetzt aktualisieren</button>
-        <span class="info" title="Laedt Status, Nachrichten, Karten und Charts sofort neu.">?</span>
+        <span class="info" title="Laedt Status, Nachrichten, Karten und Charts sofort neu." data-tooltip="Laedt Status, Nachrichten, Karten und Charts sofort neu." aria-label="Info: Aktualisieren">?</span>
       </div>
     </div>
     <div id="filterHint" class="toolbar hint" style="display:none;">Ungueltiger Regex</div>
@@ -265,11 +352,15 @@
     const topicSelectEl = document.getElementById('topicSelect');
     const regexToggleEl = document.getElementById('regexToggle');
     const filterHintEl = document.getElementById('filterHint');
+    const timeWindowEl = document.getElementById('timeWindow');
+    const timeWindowValueEl = document.getElementById('timeWindowValue');
+    const chartModeEl = document.getElementById('chartMode');
 
     const MAX_POINTS = 120;
     const seriesByTopic = new Map();
     const latestByTopic = new Map();
     let refreshTimer = null;
+    let chartMode = 'line-smooth';
 
     const chartNoticeEl = document.getElementById('chartNotice');
     let chart = null;
@@ -282,9 +373,16 @@
         },
         options: {
           responsive: true,
-          interaction: { mode: 'nearest', intersect: false },
+          interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { labels: { color: '#e5e7eb' } }
+            legend: { labels: { color: '#e5e7eb' } },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}`
+              }
+            }
           },
           scales: {
             x: { ticks: { color: '#94a3b8' }, grid: { color: '#1f2937' } },
@@ -330,15 +428,26 @@
       const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#e879f9', '#f97316', '#60a5fa'];
       return palette[idx % palette.length];
     }
+    function formatWindow(seconds) {
+      if (seconds >= 60) {
+        const minutes = Math.round(seconds / 60);
+        return `letzte ${minutes}m`;
+      }
+      return `letzte ${seconds}s`;
+    }
     function updateChart() {
       if (!chart) return;
+      const windowSeconds = Number(timeWindowEl.value || 0);
       const datasets = [];
       let labels = [];
       let i = 0;
       for (const [topic, points] of seriesByTopic.entries()) {
         const color = getColor(i++);
-        const data = points.map(p => p.value);
-        const localLabels = points.map(p => shortTime(p.ts));
+        const maxTs = points.length ? points[points.length - 1].ts : 0;
+        const cutoff = windowSeconds > 0 ? maxTs - windowSeconds : 0;
+        const filtered = windowSeconds > 0 ? points.filter(p => p.ts >= cutoff) : points;
+        const data = filtered.map(p => p.value);
+        const localLabels = filtered.map(p => shortTime(p.ts));
         if (localLabels.length > labels.length) {
           labels = localLabels;
         }
@@ -347,9 +456,13 @@
           data,
           borderColor: color,
           backgroundColor: color + '33',
-          tension: 0.25,
-          spanGaps: true
+          tension: chartMode === 'line-straight' ? 0 : 0.25,
+          spanGaps: true,
+          borderWidth: chartMode === 'bar-grouped' ? 0 : 2
         });
+      }
+      if (chart) {
+        chart.config.type = chartMode === 'bar-grouped' ? 'bar' : 'line';
       }
       chart.data.labels = labels;
       chart.data.datasets = datasets;
@@ -488,6 +601,9 @@
         refreshTimer = setInterval(refresh, seconds * 1000);
       }
     }
+    function updateWindowLabel() {
+      timeWindowValueEl.textContent = formatWindow(Number(timeWindowEl.value || 0));
+    }
 
     filterEl.addEventListener('input', () => {
       refresh();
@@ -506,10 +622,19 @@
     intervalEl.addEventListener('change', () => {
       setAutoRefresh();
     });
+    chartModeEl.addEventListener('change', () => {
+      chartMode = chartModeEl.value;
+      updateChart();
+    });
+    timeWindowEl.addEventListener('input', () => {
+      updateWindowLabel();
+      updateChart();
+    });
     refreshBtn.addEventListener('click', () => {
       refresh();
     });
 
+    updateWindowLabel();
     refresh();
     setAutoRefresh();
   </script>
