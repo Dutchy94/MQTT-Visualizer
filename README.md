@@ -31,7 +31,7 @@ make test-publish
 ```
 
 Die Web-UI erreichst du unter:
-- `http://127.0.0.1:5000`
+- `http://127.0.0.1:5000` - sofern du es Lokal hostet. Ansonsten mit <IPV4-Adresse>:5000
 
 ## Installation (ausfuehrlich)
 1) Repository holen
