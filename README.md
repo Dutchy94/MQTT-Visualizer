@@ -11,6 +11,7 @@ Flask Web-UI, die auf einem Mosquitto-Broker lauscht und eingehende MQTT-Nachric
 - Filter + Auto-Refresh in der UI
 - Kleine JSON-API zum Abfragen und optionalen Publishen
 - Läuft lokal oder im Netzwerk
+- UI-Extras: Tooltip-Hinweise an den Feldern, Zeitfenster-Slider, Diagrammtyp (Linie/Balken)
 
 ## Voraussetzungen
 - Python 3.10+
@@ -93,6 +94,15 @@ Du kannst eine `.env` im Repo anlegen (oder `.env.example` kopieren). Diese wird
 ```
 cp .env.example .env
 ```
+
+## Bedienung (kurz und knapp)
+Ich hab die UI so gebaut, dass man ohne grosses Nachdenken damit arbeiten kann:
+- Topic-Filter: schneller Textfilter, optional als Regex.
+- Topic-Auswahl: setzt den Filter direkt auf ein vorhandenes Topic.
+- Auto-Refresh: wie oft die Daten aktualisiert werden.
+- Zeitfenster-Slider: begrenzt die X-Achse auf die letzten Sekunden/Minuten.
+- Diagrammtyp: Linie (weich/gerade) oder Balken (gruppiert).
+- Beim Hover ueber die Chart-X-Achse sieht man alle Werte der Kurven an der Stelle.
 
 ## Makefile (optional)
 Wenn du lieber kurze Befehle willst:
